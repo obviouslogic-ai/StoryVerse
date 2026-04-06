@@ -1,0 +1,79 @@
+---
+description: HELIos Architecture Rules - Layer boundaries, platform patterns, ADR requirements
+globs: "src/**/*"
+alwaysApply: false
+---
+
+# Architecture Rules
+
+## Foundational Principle
+
+Consult `ARCHITECTURE.md` before making any structural changes. If your change adds, removes, or modifies a directory, module, or domain boundary, you must read and follow the architecture document first.
+
+## Structural Changes Require ADRs
+
+- No new directories or modules may be created without a corresponding Architecture Decision Record (ADR).
+- ADRs are stored in `docs/architecture/decisions/` and follow the template format.
+- An ADR must document: context, decision, consequences, and alternatives considered.
+- ADRs must be reviewed and approved before the structural change is implemented.
+
+## Layer Enforcement
+
+The codebase follows a strict layered architecture. Dependencies flow in one direction only:
+
+```
+UI → Domain → Data
+```
+
+- **UI Layer**: Components, pages, layouts. May import from Domain. May NOT import from Data.
+- **Domain Layer**: Business logic, services, hooks. May import from Data. May NOT import from UI.
+- **Data Layer**: Repositories, API clients, database access. May NOT import from UI or Domain.
+
+**Reverse dependencies are strictly prohibited.** If a lower layer needs to notify an upper layer, use events, callbacks, or dependency injection — never direct imports.
+
+## No Circular Dependencies
+
+- Circular dependencies between modules are prohibited.
+- Use dependency analysis tooling to detect and prevent circular imports.
+- If two modules have a mutual dependency, extract the shared concern into a separate module.
+
+## No Shared Mutable State
+
+- No shared mutable state across modules. Each module owns its state.
+- If state must be shared, use a state management pattern (context, store) with clear ownership.
+- Global variables and singletons are prohibited unless explicitly justified in an ADR.
+
+## API Contracts
+
+- API contracts (request/response schemas, endpoint definitions) must be defined before implementation begins.
+- Contracts are the source of truth. Implementation must conform to the contract, not the other way around.
+- Breaking changes to API contracts require a versioning strategy and migration plan.
+
+## Database Schema Changes
+
+- All database schema changes require versioned migration files.
+- Never apply manual DDL to any environment. All changes go through the migration pipeline.
+- Migrations must be reversible (include both `up` and `down` operations).
+- Migration files must be reviewed with the same rigor as application code.
+
+## Supabase-Specific Rules
+
+- **Row-Level Security (RLS)**: Use RLS policies for all row-level access control. Application-only enforcement is not sufficient — the database must enforce access boundaries.
+- **Edge Functions**: Server-side logic that requires elevated privileges or secret access must run in Supabase Edge Functions, not in client-side code.
+- **Migrations**: All Supabase schema changes must go through versioned migration files. Use `supabase migration new` to generate migration scaffolds.
+- **Client Libraries**: Use Supabase client libraries (`@supabase/supabase-js`) for all database operations. No raw SQL queries from frontend code.
+- **Realtime**: If using Supabase Realtime, define subscription scopes explicitly and ensure RLS policies cover realtime access.
+
+## Vercel-Specific Rules
+
+- **Environment Variables**: All environment variables must be configured through the Vercel platform dashboard or CLI. No hardcoded values in source code.
+- **Runtime Selection**: The choice between Edge Runtime and Serverless Runtime must be documented with rationale (e.g., latency requirements, cold start tolerance, API compatibility).
+- **Build Configuration**: Vercel build settings must be version-controlled in `vercel.json`. No manual configuration through the dashboard without corresponding repo updates.
+- **Preview Deployments**: All PRs generate preview deployments. Use preview URLs for testing before merge.
+
+## Dependency Management
+
+- New dependencies require justification: why the dependency is needed and why alternatives were rejected.
+- Prefer well-maintained packages with active security patching.
+- Pin dependency versions. No floating ranges (`^` or `~`) in production dependencies.
+- Audit dependencies regularly for known vulnerabilities.

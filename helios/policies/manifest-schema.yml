@@ -1,0 +1,117 @@
+# manifest-schema.yml
+# Schema definition for HELIos compliance enforcement manifests
+# Every .manifest.yml file in enforcement/manifests/ must follow this structure
+
+schema:
+  version: "1.0"
+  description: >
+    Defines the structure for compliance enforcement manifests.
+    Manifests are machine-parsable YAML files extracted from markdown
+    policy documents. Agents and CI read these to enforce compliance.
+
+  manifest:
+    domain:
+      type: string
+      required: true
+      description: "Policy domain (e.g., 'access-control', 'data-protection')"
+
+    source_policies:
+      type: array
+      required: true
+      description: "Markdown policy documents this manifest was extracted from"
+      items:
+        path:
+          type: string
+          description: "Relative path to source policy (e.g., 'general/access-control/authentication-credentials.md')"
+        title:
+          type: string
+          description: "Human-readable title of the source policy"
+
+    framework_refs:
+      type: array
+      required: true
+      description: "Compliance framework references (e.g., 'SOC2-CC6', 'HIPAA-164.312(d)')"
+      items:
+        type: string
+
+    last_updated:
+      type: date
+      required: true
+      description: "Date this manifest was last generated/updated"
+
+    rules:
+      type: array
+      required: true
+      description: "Enforceable rules extracted from source policies"
+      items:
+        id:
+          type: string
+          required: true
+          description: "Unique rule identifier (e.g., 'AUTH-001', 'DC-003')"
+
+        rule:
+          type: string
+          required: true
+          description: "Plain-language enforceable statement"
+
+        technical_req:
+          type: string
+          required: true
+          description: "Specific technical requirement (e.g., 'minLength: 12, bcrypt hashing')"
+
+        scope:
+          type: array
+          required: true
+          description: "Code domains where this rule applies"
+          allowed_values:
+            - auth
+            - user-management
+            - databases
+            - api
+            - storage
+            - logging
+            - encryption
+            - key-management
+            - infrastructure
+            - networking
+            - monitoring
+            - phi-pii
+            - deployment
+
+        severity:
+          type: enum
+          required: true
+          allowed_values: [critical, high, medium, low]
+          description: "Impact severity if violated"
+
+        enforced_by:
+          type: array
+          required: true
+          description: "Agents responsible for enforcing this rule"
+          allowed_values:
+            - security-agent
+            - architecture-guardian
+            - test-architect
+            - coding-execution
+            - release-readiness
+            - dependency-agent
+
+        ci_checkable:
+          type: boolean
+          required: true
+          description: "Whether this rule can be automated in CI"
+
+        check_description:
+          type: string
+          required: true
+          description: "How to verify compliance (used for test generation)"
+
+        violation_action:
+          type: enum
+          required: true
+          allowed_values:
+            - block-merge    # Critical/High: PR cannot proceed
+            - require-review # Medium: human sign-off needed
+            - warn           # Low: logged for tracking
+            - log            # Informational: recorded only
+          description: "Action taken when rule is violated"

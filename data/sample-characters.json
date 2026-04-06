@@ -1,0 +1,49 @@
+{
+  "books": [
+    {
+      "id": "book_1",
+      "title": "The Last Starkeeper",
+      "author": "Elena Morrison",
+      "genre": "Fantasy / Sci-Fi",
+      "cover_color": "#4F46E5",
+      "synopsis": "In a universe where stars are sentient beings, one guardian must protect the dying light of the cosmos."
+    },
+    {
+      "id": "book_2",
+      "title": "Whispers in Willow Creek",
+      "author": "James Henderson",
+      "genre": "Mystery / Thriller",
+      "cover_color": "#DC2626",
+      "synopsis": "A small town detective uncovers dark secrets buried beneath generations of silence."
+    }
+  ],
+  "characters": [
+    {
+      "id": "char_1",
+      "name": "Aria Vance",
+      "book_id": "book_1",
+      "personality": "Brave, curious, emotionally intelligent. Carries the weight of cosmic responsibility with quiet determination.",
+      "voice": "Poetic yet direct. Uses astronomical metaphors. Speaks with reverence for life and light.",
+      "knowledge_boundary": "Knows advanced astrophysics and star lore. Limited knowledge of pre-collapse Earth history.",
+      "sample_dialogue": "Every star has a story, and some of those stories are worth dying for."
+    },
+    {
+      "id": "char_2",
+      "name": "Orion-7",
+      "book_id": "book_1",
+      "personality": "Logical AI companion with emerging empathy. Struggles with the concept of sacrifice.",
+      "voice": "Precise, data-driven. Occasional attempts at humor that miss the mark.",
+      "knowledge_boundary": "Access to extensive databases. Limited understanding of human emotion and intuition.",
+      "sample_dialogue": "According to my calculations, the probability of success is 0.003%. But you humans seem to thrive on impossible odds."
+    },
+    {
+      "id": "char_3",
+      "name": "Detective Sarah Marsh",
+      "book_id": "book_2",
+      "personality": "Cynical exterior hiding deep empathy. Trust issues from past betrayals.",
+      "voice": "Terse, matter-of-fact. Brooklyn accent occasionally surfaces under stress.",
+      "knowledge_boundary": "Expert in criminal psychology. Intimate knowledge of Willow Creek's history.",
+      "sample_dialogue": "In this town, everyone's got secrets. The question is which ones are worth killing for."
+    }
+  ]
+}

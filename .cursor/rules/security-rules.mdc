@@ -1,0 +1,94 @@
+---
+description: HELIos Security Rules - Input validation, auth patterns, secret handling, threat awareness
+globs: "**/*"
+alwaysApply: true
+---
+
+# Security Rules
+
+## Secret Management
+
+- Never commit secrets, API keys, credentials, tokens, or private keys to the repository.
+- Use environment variables for all sensitive configuration. Reference platform-specific secret management (Vercel Environment Variables, Supabase Vault).
+- If a secret is accidentally committed, rotate it immediately. Do not rely on git history rewriting alone.
+- `.env` files must be listed in `.gitignore`. Use `.env.example` with placeholder values for documentation.
+
+## Input Validation
+
+- All user input must be validated and sanitized before processing.
+- Use Zod schemas for runtime validation on both client and server boundaries.
+- Never trust client-side validation alone. Server-side validation is mandatory.
+- Reject invalid input early. Do not attempt to "fix" or "clean" malformed data.
+
+## Authentication
+
+- Use platform authentication (Supabase Auth). Never implement custom authentication flows.
+- Support multi-factor authentication (MFA) where the platform provides it.
+- Session tokens must be stored securely (HTTP-only cookies preferred over localStorage).
+- Implement proper session invalidation on logout, password change, and account deactivation.
+
+## Authorization
+
+- Enforce authorization at the database level via Row-Level Security (RLS). Application-level checks alone are not sufficient.
+- Follow the principle of least privilege. Grant the minimum permissions required for each role.
+- Define and document all roles and their permission boundaries.
+- Authorization checks must be present on every API endpoint and database operation that accesses protected resources.
+
+## Password Security
+
+- Minimum password length: 12 characters.
+- Require password complexity (uppercase, lowercase, numbers, special characters).
+- Use bcrypt, argon2, or scrypt for password hashing. Never store or transmit passwords in plaintext.
+- Implement account lockout after repeated failed authentication attempts.
+- Never include passwords in logs, error messages, or API responses.
+
+## API Security
+
+- All API endpoints must validate authentication and authorization before processing requests.
+- HTTPS only. No HTTP fallbacks in any environment.
+- Configure CORS explicitly. No wildcard (`*`) origins in production.
+- Rate limiting is required on all public-facing endpoints. Define limits based on endpoint sensitivity.
+- Implement request size limits to prevent abuse.
+
+## Token Management
+
+- Validate token expiration on every request. Reject expired tokens immediately.
+- Implement token rotation for long-lived sessions.
+- Refresh tokens must be stored securely and rotated on use.
+- Revoke all tokens on password change or account compromise.
+
+## SQL and Database Security
+
+- Use parameterized queries for all database operations. No string concatenation in SQL.
+- Use Supabase client libraries which handle parameterization automatically.
+- Database credentials must never appear in client-side code.
+- Apply the principle of least privilege to database roles.
+
+## Audit Logging
+
+- Log all authentication events (login, logout, failed attempts, MFA challenges).
+- Log all data mutations (create, update, delete) with actor identity and timestamp.
+- Log all administrative actions (role changes, permission updates, configuration changes).
+- Never include sensitive data (passwords, tokens, PII, PHI) in audit logs.
+- Audit logs must be tamper-protected and retained per compliance requirements.
+
+## Error Handling
+
+- Never expose internal error details, stack traces, or system information to clients.
+- Return generic error messages to users. Log detailed errors server-side only.
+- Error responses must not reveal whether a resource exists (prevent enumeration attacks).
+- Catch and handle all exceptions. Unhandled exceptions must trigger alerts.
+
+## Dependency Security
+
+- No packages with known critical vulnerabilities may be added or retained.
+- Run automated vulnerability scanning on all dependencies as part of CI.
+- Subscribe to security advisories for all critical dependencies.
+- When a vulnerability is disclosed, assess impact and patch within the timeframe defined by severity (critical: 24 hours, high: 7 days).
+
+## Threat Awareness
+
+- Assume all external input is malicious until validated.
+- Design for defense in depth: multiple layers of security controls.
+- Regularly review OWASP Top 10 and SANS Top 25 for alignment.
+- If a potential security issue is identified during development, STOP and escalate to the Security Agent.

@@ -1,0 +1,75 @@
+---
+description: HELIos Coding Conventions - Validation, logging, structure, testing requirements
+globs: "src/**/*"
+alwaysApply: false
+---
+
+# Coding Conventions
+
+## Input Validation
+
+- Validate all external input with Zod schemas. No exceptions.
+- Define schemas co-located with the module that consumes them.
+- Reuse shared schemas from a central `schemas/` directory when applicable.
+
+## Module Boundaries
+
+- No cross-domain imports. Each domain is self-contained.
+- Use `providers/` for shared concerns that span multiple domains (e.g., logging, config, auth context).
+- If two domains need to communicate, use a defined interface or event contract — never direct imports.
+
+## Logging
+
+- Structured logging only. Use the project's logging utility.
+- No `console.log`, `console.warn`, or `console.error` in production code.
+- Every log entry must include: level, timestamp, correlation ID, and contextual metadata.
+- Sensitive data (PII, PHI, tokens, passwords) must never appear in log output.
+
+## File Structure
+
+- File size limit: 300 lines. If a file exceeds this, split it into focused modules.
+- One export concern per file. Avoid "god files" that handle multiple responsibilities.
+- Group related files by feature/domain, not by technical type.
+
+## Documentation
+
+- Every public function must have a JSDoc comment describing its purpose, parameters, return value, and thrown errors.
+- Complex business logic must include inline comments explaining the "why," not the "what."
+- Update documentation when changing function signatures or behavior.
+
+## Testing
+
+- Tests are required for all files in `services/` and `hooks/` directories.
+- Test file naming: `[module].test.ts` co-located with the source file.
+- Minimum test coverage: happy path, primary error path, and edge cases.
+- Tests must be deterministic — no reliance on external services, time, or random values without mocking.
+
+## Branch and Commit Conventions
+
+- Branch naming: `[linear-id]-short-description` (e.g., `ENG-1234-add-user-auth`).
+- Commit messages: `[LINEAR-ID] description of change` (e.g., `[ENG-1234] Add JWT validation middleware`).
+- Keep commits atomic — one logical change per commit.
+
+## PR Conventions
+
+- Link the Linear issue in the PR description.
+- PR description must include: what changed, why it changed, and how to test it.
+- No PR may be merged without passing all CI checks and at least one peer review.
+
+## Technical Debt
+
+- No `TODO` or `FIXME` comments without a linked Linear issue (e.g., `// TODO [ENG-5678]: Refactor after migration`).
+- Unlinked TODOs will be flagged and blocked in code review.
+
+## Error Handling
+
+- Use Result types (e.g., `Result<T, E>`) or explicit error boundaries for all operations that can fail.
+- Never swallow errors silently. Every caught error must be logged or re-thrown.
+- User-facing error messages must be generic. Internal error details go to structured logs only.
+
+## Async Operations
+
+- All async operations must have a defined timeout.
+- Retry logic must be explicit: define max retries, backoff strategy, and failure behavior.
+- Use abort controllers or cancellation tokens for long-running operations.
+- Document the expected latency and failure mode for every external call.

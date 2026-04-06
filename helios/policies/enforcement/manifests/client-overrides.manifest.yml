@@ -1,0 +1,24 @@
+# client-overrides.manifest.yml
+# Client-specific enforcement manifest for compliance overrides
+# This manifest contains rules that ADD TO or INCREASE severity of baseline policies.
+# Client overrides CANNOT weaken or remove baseline protections.
+#
+# Instructions:
+# 1. Extract client-specific requirements from policies/client/ documents
+# 2. For each requirement that goes beyond baseline:
+#    - If it's a NEW rule: add with CLT-xxx ID prefix
+#    - If it INCREASES severity of a baseline rule: add override with same ID, increased severity
+# 3. Validate against manifest-schema.yml
+# 4. All client overrides require HAA approval
+#
+# When no client policies exist, leave rules: [] and source_policies: [] empty.
+
+domain: client-overrides
+
+source_policies: []
+
+framework_refs: []
+
+last_updated: 2026-02-14
+
+rules: []

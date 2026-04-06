@@ -1,0 +1,125 @@
+# data-protection.manifest.yml
+# Enforcement manifest for Data Protection domain
+# Extracted from: policies/general/data-protection/
+
+domain: data-protection
+
+source_policies:
+  - path: "general/data-protection/data-classification-handling.md"
+    title: "Data Classification & Handling"
+  - path: "general/data-protection/data-retention-disposal.md"
+    title: "Data Retention & Disposal"
+  - path: "general/data-protection/hipaa-security-rule-safeguards.md"
+    title: "HIPAA Security Rule Safeguards"
+  - path: "general/data-protection/non-production-data-handling.md"
+    title: "Non-Production Data Handling"
+
+framework_refs:
+  - "SOC2-CC6.1"
+  - "SOC2-C1.1"
+  - "SOC2-C1.2"
+  - "HIPAA-164.312(a)(2)(iv)"
+  - "HIPAA-164.312(e)(1)"
+  - "HIPAA-164.312(e)(2)(ii)"
+  - "NIST-SC-8"
+  - "NIST-SC-12"
+  - "NIST-SC-13"
+  - "NIST-SC-28"
+
+last_updated: 2026-02-14
+
+rules:
+  - id: DC-001
+    rule: "All data at rest must be encrypted using AES-256 or equivalent"
+    technical_req: "Database-level encryption enabled (Supabase TDE). Sensitive columns (PHI, PII, credentials) use application-level encryption with AES-256-GCM. Encryption keys managed via dedicated key management."
+    scope:
+      - databases
+      - storage
+      - encryption
+      - key-management
+    severity: critical
+    enforced_by:
+      - security-agent
+      - architecture-guardian
+      - coding-execution
+    ci_checkable: true
+    check_description: "Verify database encryption is active. Verify sensitive columns use application-level encryption. Test that raw database values for sensitive fields are not human-readable."
+    violation_action: block-merge
+
+  - id: DC-002
+    rule: "All data in transit must use TLS 1.2 or higher"
+    technical_req: "HTTPS enforced on all endpoints. TLS 1.2 minimum, TLS 1.3 preferred. HSTS headers enabled. No mixed content allowed. Certificate validity monitored."
+    scope:
+      - api
+      - networking
+      - infrastructure
+    severity: critical
+    enforced_by:
+      - security-agent
+      - architecture-guardian
+      - coding-execution
+    ci_checkable: true
+    check_description: "Verify all API endpoints enforce HTTPS. Verify TLS configuration rejects connections below TLS 1.2. Verify HSTS header is present with appropriate max-age."
+    violation_action: block-merge
+
+  - id: DC-003
+    rule: "Data must be classified and handled according to classification level"
+    technical_req: "Four-tier classification: Public, Internal, Confidential, Restricted. All data fields in schema annotated with classification. Handling rules enforced per classification level."
+    scope:
+      - databases
+      - api
+      - storage
+      - phi-pii
+    severity: high
+    enforced_by:
+      - security-agent
+      - architecture-guardian
+    ci_checkable: false
+    check_description: "Review data schema for classification annotations. Verify handling rules match classification level (e.g., Restricted data encrypted, access-logged, and retention-limited)."
+    violation_action: block-merge
+
+  - id: PHI-001
+    rule: "PHI/PII must never appear in logs, error messages, or client-side storage"
+    technical_req: "Log sanitization for all PHI/PII fields. Error responses must not leak sensitive data. No PHI/PII in localStorage, sessionStorage, or cookies. Redaction applied before logging."
+    scope:
+      - logging
+      - api
+      - phi-pii
+    severity: critical
+    enforced_by:
+      - security-agent
+      - coding-execution
+      - test-architect
+    ci_checkable: true
+    check_description: "Static analysis for PHI/PII field names in log statements. Test that error responses do not include sensitive field values. Verify log sanitization middleware is applied to all logging paths."
+    violation_action: block-merge
+
+  - id: DR-001
+    rule: "Data retention periods must comply with regulatory and policy requirements"
+    technical_req: "Retention schedule defined per data classification. Automated deletion for expired data. Retention minimum: 6 years for financial, 6 years for HIPAA, per policy for others. Deletion must be verifiable."
+    scope:
+      - databases
+      - storage
+    severity: medium
+    enforced_by:
+      - security-agent
+      - architecture-guardian
+      - release-readiness
+    ci_checkable: false
+    check_description: "Verify retention schedule exists and covers all data types. Verify automated deletion jobs are configured. Test that deletion removes data from all storage locations including backups beyond retention."
+    violation_action: require-review
+
+  - id: DC-004
+    rule: "Production data must never be used in non-production environments"
+    technical_req: "No database clones from production to dev/staging without anonymization. Synthetic data generators for development. Data masking applied if production snapshots are needed for debugging."
+    scope:
+      - databases
+      - infrastructure
+      - deployment
+    severity: high
+    enforced_by:
+      - security-agent
+      - architecture-guardian
+    ci_checkable: false
+    check_description: "Verify non-production environments use synthetic or anonymized data. Review database provisioning scripts for production data references. Verify data masking pipeline exists if production snapshots are permitted."
+    violation_action: block-merge

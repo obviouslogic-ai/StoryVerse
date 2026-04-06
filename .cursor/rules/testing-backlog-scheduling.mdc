@@ -1,0 +1,27 @@
+---
+description: HELIos testing protocol and Linear backlog scheduling
+alwaysApply: true
+---
+
+# Testing Backlog Scheduling
+
+For HELIos-governed repos, treat testing as a release gate and a backlog-management concern.
+
+- `PPMA` evaluates delivery context and release cadence.
+- `ATADA` maps current coverage against the repo's supported and required test matrix.
+- `PGA` enforces whether missing coverage must be scheduled in Linear.
+- `RRA` cannot issue `GO` if required validation is missing and remediation is undocumented.
+
+Open or refresh Linear testing backlog when any of these are true:
+
+- production-bound work touches auth, database, migrations, permissions, routing, payments, deploy/runtime config, or CI gates
+- production delivery volume is high enough that stale validation increases risk
+- the repo's full-suite evidence is older than the allowed freshness window
+- a test category is blocking release confidence even if the code itself did not fail
+
+Use a parent/child Linear model:
+
+- one parent issue per repo for testing debt and testing infrastructure
+- child backlog tasks for each missing or newly required test category
+
+Always report results as `PASS`, `BLOCKED`, `FAIL`, or not implemented yet. Missing or blocked coverage is never green.

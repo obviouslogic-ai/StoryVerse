@@ -1,0 +1,94 @@
+# development-change.manifest.yml
+# Enforcement manifest for Development & Change Management domain
+# Extracted from: policies/general/development-change/
+
+domain: development-change
+
+source_policies:
+  - path: "general/development-change/secure-sdlc.md"
+    title: "Secure SDLC Policy"
+  - path: "general/development-change/change-management.md"
+    title: "Change Management"
+  - path: "general/development-change/api-security-review.md"
+    title: "API Security Review"
+
+framework_refs:
+  - "SOC2-CC8.1"
+  - "SOC2-CC7.1"
+  - "HIPAA-164.312(a)(1)"
+  - "NIST-SA-11"
+  - "NIST-CM-3"
+  - "NIST-SI-10"
+
+last_updated: 2026-02-14
+
+rules:
+  - id: DEV-001
+    rule: "All code changes must be peer reviewed before merging"
+    technical_req: "Minimum one approved review required on all PRs to main/production branches. Reviewers must not be the PR author. Review must cover security implications, test coverage, and compliance impact."
+    scope:
+      - deployment
+    severity: high
+    enforced_by:
+      - release-readiness
+      - coding-execution
+    ci_checkable: true
+    check_description: "Verify branch protection rules require at least one approved review. Verify PR author is not the sole approver. Check that review checklist includes security and compliance items."
+    violation_action: block-merge
+
+  - id: DEV-002
+    rule: "No direct commits to main or production branches"
+    technical_req: "Branch protection enabled on main and production branches. All changes via pull requests. Force push disabled. Require up-to-date branches before merging."
+    scope:
+      - deployment
+    severity: high
+    enforced_by:
+      - release-readiness
+    ci_checkable: true
+    check_description: "Verify branch protection configuration on main/production branches. Verify direct push is disabled. Verify force push is disabled. Check for any bypass permissions."
+    violation_action: block-merge
+
+  - id: SEC-001
+    rule: "Code must align with OWASP Top 10 and secure coding standards"
+    technical_req: "No SQL injection vectors (use parameterized queries). No XSS vectors (sanitize output). No CSRF vulnerabilities (token validation). No insecure deserialization. Dependency vulnerability scanning enabled."
+    scope:
+      - api
+      - auth
+      - databases
+    severity: high
+    enforced_by:
+      - security-agent
+      - coding-execution
+      - test-architect
+    ci_checkable: true
+    check_description: "SAST scan for OWASP Top 10 vulnerability patterns. Verify parameterized queries for all database access. Verify output encoding/sanitization. Verify CSRF protection on state-changing endpoints."
+    violation_action: block-merge
+
+  - id: API-001
+    rule: "All API endpoints must validate and sanitize input"
+    technical_req: "Schema validation (Zod, Joi, or equivalent) on all API request bodies, query params, and path params. Reject unexpected fields. Enforce type constraints. Rate limiting on all public endpoints."
+    scope:
+      - api
+    severity: high
+    enforced_by:
+      - security-agent
+      - coding-execution
+      - test-architect
+    ci_checkable: true
+    check_description: "Verify every API route has input validation middleware. Test with malformed inputs (missing required fields, wrong types, extra fields, oversized payloads). Verify rate limiting configuration."
+    violation_action: block-merge
+
+  - id: DEV-003
+    rule: "No secrets or credentials committed to source control"
+    technical_req: "Pre-commit hooks scanning for secrets. .env files in .gitignore. No hardcoded API keys, tokens, passwords, or connection strings. Secrets managed via environment variables or vault."
+    scope:
+      - auth
+      - infrastructure
+      - deployment
+    severity: critical
+    enforced_by:
+      - security-agent
+      - coding-execution
+    ci_checkable: true
+    check_description: "Secret scanning in CI (e.g., gitleaks, trufflehog). Verify .gitignore includes .env and credential files. Static analysis for hardcoded secret patterns (API keys, tokens, connection strings)."
+    violation_action: block-merge

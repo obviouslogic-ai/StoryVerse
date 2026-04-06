@@ -1,0 +1,121 @@
+# access-control.manifest.yml
+# Enforcement manifest for Access Control domain
+# Extracted from: policies/general/access-control/
+
+domain: access-control
+
+source_policies:
+  - path: "general/access-control/authentication-credentials.md"
+    title: "Authentication & Credential Management"
+  - path: "general/access-control/access-control-iam.md"
+    title: "Access Control and IAM"
+  - path: "general/access-control/privileged-access-governance.md"
+    title: "Privileged Access Governance"
+
+framework_refs:
+  - "SOC2-CC6.1"
+  - "SOC2-CC6.2"
+  - "SOC2-CC6.3"
+  - "HIPAA-164.312(d)"
+  - "HIPAA-164.312(a)(1)"
+  - "NIST-IA-2"
+  - "NIST-IA-5"
+  - "NIST-AC-2"
+  - "NIST-AC-3"
+  - "NIST-AC-6"
+
+last_updated: 2026-02-14
+
+rules:
+  - id: AUTH-001
+    rule: "Passwords must meet minimum complexity requirements"
+    technical_req: "minLength: 12, must include uppercase, lowercase, digit, and special character"
+    scope:
+      - auth
+      - user-management
+    severity: high
+    enforced_by:
+      - security-agent
+      - coding-execution
+      - test-architect
+    ci_checkable: true
+    check_description: "Verify password validation schema enforces minLength >= 12 and requires all four character classes (uppercase, lowercase, digit, special). Test with boundary cases."
+    violation_action: block-merge
+
+  - id: AUTH-002
+    rule: "No plaintext password storage anywhere in the system"
+    technical_req: "All passwords hashed with bcrypt (cost >= 12), argon2id, or scrypt. No reversible encryption for passwords."
+    scope:
+      - auth
+      - databases
+    severity: critical
+    enforced_by:
+      - security-agent
+      - coding-execution
+      - test-architect
+      - architecture-guardian
+    ci_checkable: true
+    check_description: "Static analysis scan for plaintext password patterns in code and schema. Integration test verifying auth module uses approved hashing algorithm. No 'password' columns of type varchar/text without hashing wrapper."
+    violation_action: block-merge
+
+  - id: AC-001
+    rule: "All resource access must be governed by role-based access control"
+    technical_req: "RBAC system with defined roles. Every API endpoint and database query must check user role. Supabase RLS policies on all tables containing user data."
+    scope:
+      - auth
+      - api
+      - databases
+      - user-management
+    severity: high
+    enforced_by:
+      - security-agent
+      - architecture-guardian
+      - coding-execution
+    ci_checkable: true
+    check_description: "Verify RLS is enabled on all tables with user data. Verify API middleware checks role before resource access. No unprotected endpoints serving user-specific data."
+    violation_action: block-merge
+
+  - id: AUTH-003
+    rule: "Multi-factor authentication must be available for all user accounts"
+    technical_req: "MFA support via TOTP or WebAuthn. MFA required for admin/privileged roles. MFA optional but encouraged for standard users."
+    scope:
+      - auth
+      - user-management
+    severity: high
+    enforced_by:
+      - security-agent
+      - architecture-guardian
+      - coding-execution
+    ci_checkable: true
+    check_description: "Verify MFA enrollment flow exists. Verify admin roles require MFA. Test MFA challenge during authentication for MFA-enrolled users."
+    violation_action: block-merge
+
+  - id: SESS-001
+    rule: "Sessions must have defined timeouts and secure token handling"
+    technical_req: "Session timeout: 30 min idle, 24 hr absolute. Tokens: HttpOnly, Secure, SameSite=Strict. Token rotation on privilege escalation. Invalidation on logout."
+    scope:
+      - auth
+      - api
+    severity: high
+    enforced_by:
+      - security-agent
+      - coding-execution
+      - test-architect
+    ci_checkable: true
+    check_description: "Verify session configuration includes idle timeout <= 30 min and absolute timeout <= 24 hr. Verify cookie attributes include HttpOnly, Secure, SameSite. Test session invalidation on logout."
+    violation_action: block-merge
+
+  - id: PAM-001
+    rule: "Privileged access must be reviewed quarterly and follow least-privilege principle"
+    technical_req: "Admin role assignments logged and auditable. Quarterly access review process documented. No shared admin accounts. Service accounts use scoped credentials."
+    scope:
+      - auth
+      - user-management
+      - infrastructure
+    severity: medium
+    enforced_by:
+      - security-agent
+      - release-readiness
+    ci_checkable: false
+    check_description: "Review admin role assignments against documented approval records. Verify no shared admin credentials. Verify service accounts have minimum required permissions."
+    violation_action: require-review

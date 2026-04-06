@@ -1,0 +1,107 @@
+# infrastructure-config.manifest.yml
+# Enforcement manifest for Infrastructure & Configuration domain
+# Extracted from: policies/general/infrastructure-configuration/
+
+domain: infrastructure-configuration
+
+source_policies:
+  - path: "general/infrastructure-configuration/encryption-key-management.md"
+    title: "Encryption and Key Management"
+  - path: "general/infrastructure-configuration/key-lifecycle-custody.md"
+    title: "Key Lifecycle and Custody"
+  - path: "general/infrastructure-configuration/configuration-management.md"
+    title: "Configuration Management"
+  - path: "general/infrastructure-configuration/network-configuration-review.md"
+    title: "Network Configuration Review"
+  - path: "general/infrastructure-configuration/environment-risk-classification.md"
+    title: "Environment Risk Classification"
+
+framework_refs:
+  - "SOC2-CC6.6"
+  - "SOC2-CC6.7"
+  - "SOC2-A1.2"
+  - "HIPAA-164.312(e)(1)"
+  - "HIPAA-164.312(a)(2)(iv)"
+  - "NIST-SC-8"
+  - "NIST-SC-12"
+  - "NIST-SC-13"
+  - "NIST-CM-2"
+  - "NIST-CM-6"
+
+last_updated: 2026-02-14
+
+rules:
+  - id: INFRA-001
+    rule: "TLS 1.2 is the minimum supported protocol; TLS 1.3 preferred"
+    technical_req: "TLS 1.0 and 1.1 disabled. Cipher suites restricted to AEAD ciphers (AES-GCM, ChaCha20-Poly1305). Certificate management automated (auto-renewal). HSTS enabled with minimum 1-year max-age."
+    scope:
+      - networking
+      - infrastructure
+      - api
+    severity: critical
+    enforced_by:
+      - security-agent
+      - architecture-guardian
+    ci_checkable: true
+    check_description: "Verify TLS configuration rejects TLS 1.0/1.1. Verify cipher suite allowlist includes only AEAD ciphers. Verify HSTS header with max-age >= 31536000. Test SSL handshake with outdated protocols."
+    violation_action: block-merge
+
+  - id: KM-001
+    rule: "Cryptographic keys must be managed through a dedicated key management system"
+    technical_req: "No hardcoded encryption keys. Keys stored in environment variables, vault, or managed KMS. Key rotation policy: encryption keys rotated annually minimum. Separate keys per environment. Key access audited."
+    scope:
+      - encryption
+      - key-management
+      - infrastructure
+    severity: critical
+    enforced_by:
+      - security-agent
+      - architecture-guardian
+      - coding-execution
+    ci_checkable: true
+    check_description: "Static analysis for hardcoded key patterns. Verify key storage uses environment variables or KMS. Verify key rotation schedule is documented. Verify environment-specific keys (no shared keys across environments)."
+    violation_action: block-merge
+
+  - id: NET-001
+    rule: "Network access must follow least-privilege with segmentation"
+    technical_req: "Database not publicly accessible. API exposed only through load balancer/CDN. Service-to-service communication over private network. Firewall rules deny-by-default with explicit allow rules."
+    scope:
+      - networking
+      - infrastructure
+      - databases
+    severity: high
+    enforced_by:
+      - security-agent
+      - architecture-guardian
+    ci_checkable: false
+    check_description: "Verify database is not publicly accessible (Supabase project settings). Verify firewall/security group rules follow deny-by-default. Review network architecture diagram for segmentation."
+    violation_action: block-merge
+
+  - id: CM-001
+    rule: "Infrastructure configuration must be version-controlled and reproducible"
+    technical_req: "Infrastructure as Code (IaC) for all infrastructure. Configuration changes via PR with review. No manual configuration changes in production. Environment parity maintained across dev/staging/prod."
+    scope:
+      - infrastructure
+      - deployment
+    severity: medium
+    enforced_by:
+      - architecture-guardian
+      - release-readiness
+    ci_checkable: false
+    check_description: "Verify IaC files exist for all infrastructure components. Verify configuration changes go through PR process. Review for manual production changes outside IaC."
+    violation_action: require-review
+
+  - id: ENV-001
+    rule: "Development, staging, and production environments must be strictly separated"
+    technical_req: "Separate credentials per environment. No cross-environment data access. Environment-specific configuration (no shared .env files). Production access restricted to authorized personnel only."
+    scope:
+      - infrastructure
+      - deployment
+      - databases
+    severity: high
+    enforced_by:
+      - security-agent
+      - architecture-guardian
+    ci_checkable: true
+    check_description: "Verify separate credentials per environment. Verify no cross-environment database connections. Verify environment variable configuration is environment-specific. Review access controls for production environment."
+    violation_action: block-merge

@@ -1,0 +1,111 @@
+# HELIos Compliance Gate (adapted for StoryVerse static MVP)
+# Scans index.html and data/ instead of src/.
+# Maps to enforcement manifests:
+#   CMP-001: access-control, data-protection (secret handling)
+#   CMP-002: infrastructure-config (encryption, transport)
+#   CMP-004: development-change, infrastructure-config (environment hygiene)
+name: Compliance Gate
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  secret-scan:
+    name: "CMP-001: Secret Scan"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: "CMP-001.1 — Scan for AWS access keys"
+        run: |
+          echo "Policy: CMP-001.1 — No AWS access keys in source"
+          if grep -rn -E "AKIA[0-9A-Z]{16}" index.html data/ 2>/dev/null; then
+            echo "::error::FAIL [CMP-001.1] AWS access key pattern detected."
+            exit 1
+          fi
+          echo "PASS [CMP-001.1] No AWS access keys found."
+
+      - name: "CMP-001.2 — Scan for API key assignments"
+        run: |
+          echo "Policy: CMP-001.2 — No hardcoded API keys"
+          if grep -rn -E "api[_-]?key\s*[:=]\s*['\"][A-Za-z0-9]{16,}" index.html data/ 2>/dev/null; then
+            echo "::error::FAIL [CMP-001.2] Hardcoded API key detected."
+            exit 1
+          fi
+          echo "PASS [CMP-001.2] No hardcoded API keys found."
+
+      - name: "CMP-001.3 — Scan for token patterns"
+        run: |
+          echo "Policy: CMP-001.3 — No hardcoded tokens"
+          PATTERNS=(
+            "sk-[A-Za-z0-9]{20,}"
+            "ghp_[A-Za-z0-9]{36}"
+            "gho_[A-Za-z0-9]{36}"
+            "xox[bpoas]-[A-Za-z0-9-]{10,}"
+            "sk_live_[A-Za-z0-9]{24,}"
+          )
+          FOUND=0
+          for pattern in "${PATTERNS[@]}"; do
+            if grep -rn -E "$pattern" index.html data/ 2>/dev/null; then
+              echo "::error::FAIL [CMP-001.3] Token pattern matched: $pattern"
+              FOUND=1
+            fi
+          done
+          if [ "$FOUND" -eq 1 ]; then exit 1; fi
+          echo "PASS [CMP-001.3] No hardcoded tokens found."
+
+      - name: "CMP-001.4 — Scan for password assignments"
+        run: |
+          echo "Policy: CMP-001.4 — No hardcoded passwords"
+          if grep -rn -E "(password|passwd|pwd|secret)\s*[:=]\s*['\"][^'\"]{4,}" index.html data/ 2>/dev/null; then
+            echo "::error::FAIL [CMP-001.4] Hardcoded password/secret detected."
+            exit 1
+          fi
+          echo "PASS [CMP-001.4] No hardcoded passwords found."
+
+  encryption-check:
+    name: "CMP-002: Encryption & Transport Security"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: "CMP-002.2 — Verify HTTPS enforcement"
+        run: |
+          echo "Policy: CMP-002.2 — All external URLs must use HTTPS"
+          HTTP_URLS=$(grep -rn -E "http://(?!localhost|127\.0\.0\.1|0\.0\.0\.0)" index.html data/ 2>/dev/null || true)
+          if [ -n "$HTTP_URLS" ]; then
+            echo "::error::FAIL [CMP-002.2] Non-HTTPS URLs found (excluding localhost):"
+            echo "$HTTP_URLS"
+            exit 1
+          fi
+          echo "PASS [CMP-002.2] All external URLs use HTTPS."
+
+  environment-check:
+    name: "CMP-004: Environment Hygiene"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: "CMP-004.3 — Verify .env files are gitignored"
+        run: |
+          echo "Policy: CMP-004.3 — .env files must not be committed"
+          ENV_FILES=$(find . -name ".env" -o -name ".env.local" -o -name ".env.production" | grep -v node_modules || true)
+          if [ -n "$ENV_FILES" ]; then
+            echo "::error::FAIL [CMP-004.3] .env files found in repository:"
+            echo "$ENV_FILES"
+            exit 1
+          fi
+          echo "PASS [CMP-004.3] No .env files committed."
+
+      - name: "CMP-004.4 — Summary"
+        if: always()
+        run: |
+          echo "============================================="
+          echo "  Compliance Gate — Environment Hygiene"
+          echo "  Policy Group: CMP-004"
+          echo "  All checks complete."
+          echo "============================================="

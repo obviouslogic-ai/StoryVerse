@@ -1,0 +1,107 @@
+# security-operations.manifest.yml
+# Enforcement manifest for Security Operations domain
+# Extracted from: policies/general/security-operations/
+
+domain: security-operations
+
+source_policies:
+  - path: "general/security-operations/logging-monitoring.md"
+    title: "Logging & Monitoring Policy"
+  - path: "general/security-operations/incident-response.md"
+    title: "Incident Response"
+  - path: "general/security-operations/vulnerability-management.md"
+    title: "Vulnerability Management"
+  - path: "general/security-operations/log-sanitization.md"
+    title: "Log Sanitization"
+
+framework_refs:
+  - "SOC2-CC7.2"
+  - "SOC2-CC7.3"
+  - "SOC2-CC7.4"
+  - "HIPAA-164.312(b)"
+  - "HIPAA-164.308(a)(1)(ii)(D)"
+  - "HIPAA-164.308(a)(6)"
+  - "NIST-AU-2"
+  - "NIST-AU-3"
+  - "NIST-AU-11"
+  - "NIST-IR-4"
+  - "NIST-SI-2"
+
+last_updated: 2026-02-14
+
+rules:
+  - id: LOG-001
+    rule: "Structured logging with minimum 180-day retention"
+    technical_req: "JSON-structured log output. Retention: 180 days minimum (hot: 30 days, warm: 150 days). Required fields: timestamp (ISO 8601), user_id, action, resource, result, ip_address, session_id."
+    scope:
+      - logging
+      - monitoring
+      - infrastructure
+    severity: high
+    enforced_by:
+      - security-agent
+      - architecture-guardian
+      - coding-execution
+    ci_checkable: true
+    check_description: "Verify logging configuration outputs JSON format. Verify retention policy is set to >= 180 days. Test log entries include all required fields. Verify log storage destination and lifecycle policy."
+    violation_action: block-merge
+
+  - id: LOG-002
+    rule: "Security-relevant events must generate audit log entries"
+    technical_req: "Mandatory audit events: login success/failure, logout, password change, role change, permission change, data access (Confidential+), data modification, admin actions, MFA enrollment/use, API key operations."
+    scope:
+      - logging
+      - auth
+      - user-management
+      - databases
+    severity: high
+    enforced_by:
+      - security-agent
+      - coding-execution
+      - test-architect
+    ci_checkable: true
+    check_description: "Verify audit logging middleware covers all mandatory event types. Test each event type generates a log entry. Verify audit logs cannot be modified or deleted by application code."
+    violation_action: block-merge
+
+  - id: IR-001
+    rule: "Incident response plan must be documented and accessible"
+    technical_req: "Documented IRP covering: identification, containment, eradication, recovery, lessons learned. Contact list current. Severity classification defined. Communication templates ready. Tested annually."
+    scope:
+      - monitoring
+    severity: medium
+    enforced_by:
+      - security-agent
+      - release-readiness
+    ci_checkable: false
+    check_description: "Verify IRP document exists and covers all required phases. Verify contact list is current. Verify last test date is within 12 months."
+    violation_action: require-review
+
+  - id: VULN-001
+    rule: "Dependencies must be scanned for known vulnerabilities"
+    technical_req: "Automated dependency scanning in CI (npm audit, Snyk, or equivalent). Critical/high vulnerabilities must be remediated before merge. Medium vulnerabilities tracked with SLA. Dependency lockfile required."
+    scope:
+      - deployment
+      - infrastructure
+    severity: high
+    enforced_by:
+      - dependency-agent
+      - security-agent
+      - coding-execution
+    ci_checkable: true
+    check_description: "Verify dependency scanning step exists in CI pipeline. Verify critical/high findings block merge. Verify lockfile (package-lock.json, yarn.lock) is committed and up to date."
+    violation_action: block-merge
+
+  - id: AUDIT-001
+    rule: "Audit trail must be tamper-evident and independently verifiable"
+    technical_req: "Audit logs written to append-only storage or separate audit service. Application code cannot modify or delete audit entries. Audit log integrity verifiable (checksums or write-once storage)."
+    scope:
+      - logging
+      - databases
+      - infrastructure
+    severity: high
+    enforced_by:
+      - security-agent
+      - architecture-guardian
+    ci_checkable: false
+    check_description: "Verify audit log storage is append-only or write-once. Verify application database credentials do not have DELETE permission on audit tables. Review architecture for audit log integrity guarantees."
+    violation_action: block-merge

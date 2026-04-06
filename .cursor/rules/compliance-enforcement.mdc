@@ -1,0 +1,121 @@
+---
+description: HELIos Compliance Enforcement - Policy manifest checking for scoped domains
+globs: "src/**/*"
+alwaysApply: false
+---
+
+# Compliance Enforcement
+
+You must check compliance enforcement manifests before writing code in these scoped domains:
+
+- Authentication and authorization
+- Data handling, storage, and processing
+- Encryption and key management
+- Logging, monitoring, and audit trails
+- PHI/PII handling
+- User management and access control
+- API security
+
+## How to Check
+
+1. Read the relevant enforcement manifest in `helios/policies/enforcement/manifests/`.
+2. Identify all rules that apply to the domain you are working in.
+3. Ensure your implementation satisfies each applicable rule.
+4. Reference the rule ID (e.g., `AUTH-001`) in code comments where non-obvious compliance choices are made.
+5. If a rule cannot be satisfied with the current approach, **STOP** and escalate to the appropriate authority.
+
+## Manifest Mapping
+
+| Domain | Manifest File |
+|--------|--------------|
+| Authentication / Authorization | `access-control.manifest.yml` |
+| Data handling / PHI / PII | `data-protection.manifest.yml` |
+| Encryption / Key management | `infrastructure-config.manifest.yml` |
+| Logging / Monitoring / Audit | `security-operations.manifest.yml` |
+| Development practices | `development-change.manifest.yml` |
+| API security | `access-control.manifest.yml` |
+| User management | `access-control.manifest.yml` |
+
+## Key Technical Requirements (from Baseline Policies)
+
+### Encryption
+- Encryption at rest: AES-256 minimum.
+- Encryption in transit: TLS 1.2 minimum (TLS 1.3 preferred).
+- Key rotation must follow a documented schedule.
+- No custom cryptographic implementations. Use platform-provided or vetted libraries only.
+
+### Passwords and Authentication
+- Password minimum length: 12 characters.
+- Password complexity requirements: uppercase, lowercase, numbers, special characters.
+- Hashing algorithms: bcrypt, argon2, or scrypt only.
+- Multi-factor authentication must be available for privileged accounts.
+- Session timeout and re-authentication policies must be enforced.
+
+### Logging and Monitoring
+- Log retention: 180-day minimum.
+- Logs must be tamper-protected (append-only or cryptographically signed).
+- Centralized log aggregation is required.
+- Security-relevant events must trigger real-time alerts.
+- No PHI, PII, passwords, tokens, or secrets in log output.
+
+### Access Control
+- Role-Based Access Control (RBAC) is the baseline model.
+- Principle of least privilege must be applied to all roles.
+- Quarterly review of all privileged access is required.
+- Service accounts must have scoped permissions and rotate credentials regularly.
+- Access grants must be auditable (who granted, when, what scope).
+
+### Data Classification
+- All data must be classified: **Public**, **Internal**, **Confidential**, or **Regulated**.
+- Default classification is **Internal** if not explicitly set.
+- Confidential and Regulated data require encryption at rest and in transit.
+- Regulated data (PHI, PII, financial) has additional handling requirements defined in the data-protection manifest.
+
+### Data Handling
+- No PHI or PII in logs, error messages, or client-facing error responses.
+- No production data in non-production environments. Use synthetic or anonymized data for testing.
+- Data retention and deletion policies must be implemented as defined in the data-protection manifest.
+- Data exports must be authorized and logged.
+
+### Environment Separation
+- Separate environments required: development, test, staging, production.
+- Environment-specific configurations must not leak across boundaries.
+- Production access is restricted and audited.
+
+### Development Practices
+- All code changes require peer review before merge.
+- Automated testing must pass before merge (CI gate).
+- OWASP Top 10 and SANS Top 25 alignment is required for all security-relevant code.
+- Static analysis and dependency scanning must run in CI.
+
+## Violation Handling
+
+Violations are categorized by severity. The enforcement behavior for each level:
+
+| Severity | Enforcement | Description |
+|----------|-------------|-------------|
+| **Critical** | `block-merge` | PR cannot proceed. Must be resolved before any further action. |
+| **High** | `block-merge` | PR cannot proceed. Resolution required with documented justification. |
+| **Medium** | `require-review` | Human sign-off required. A reviewer must explicitly acknowledge and approve the deviation. |
+| **Low** | `warn` | Logged for tracking. Does not block, but must be addressed in a follow-up. |
+
+## Related Compliance Files
+
+- `helios/policies/enforcement/violation-classifications.md` — Severity and violation_action definitions
+- `helios/policies/enforcement/policy-gate-checklist.md` — Pre-release verification checklist
+- `helios/policies/manifest-schema.yml` — Schema for enforcement manifests
+
+## Escalation
+
+If you encounter a compliance rule that:
+- Cannot be satisfied with the current technical approach
+- Conflicts with another compliance rule
+- Is ambiguous in its application to the current context
+
+**STOP immediately.** Do not attempt to interpret or work around the rule. Escalate to the Security Agent or Human Approval Authority with:
+1. The specific rule ID and manifest
+2. The context of your implementation
+3. Why the rule cannot be satisfied
+4. Proposed alternatives (if any)
+
+Compliance exceptions require HAA sign-off and must be documented in the policy exception register.

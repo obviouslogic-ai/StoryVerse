@@ -1,0 +1,81 @@
+# business-continuity.manifest.yml
+# Enforcement manifest for Business Continuity domain
+# Extracted from: policies/general/business-continuity/
+
+domain: business-continuity
+
+source_policies:
+  - path: "general/business-continuity/backup-recovery.md"
+    title: "Backup & Recovery"
+  - path: "general/business-continuity/business-continuity-disaster-recovery.md"
+    title: "Business Continuity and Disaster Recovery"
+
+framework_refs:
+  - "SOC2-A1.1"
+  - "SOC2-A1.2"
+  - "SOC2-A1.3"
+  - "HIPAA-164.308(a)(7)"
+  - "HIPAA-164.310(a)(2)(i)"
+  - "NIST-CP-2"
+  - "NIST-CP-9"
+  - "NIST-CP-10"
+
+last_updated: 2026-02-14
+
+rules:
+  - id: BC-001
+    rule: "Automated backups must run daily with verified restoration capability"
+    technical_req: "Daily automated backups of all databases and critical data stores. Backup encryption using AES-256. Backup stored in geographically separate location. Backup integrity verified via automated checksums."
+    scope:
+      - databases
+      - storage
+      - infrastructure
+    severity: high
+    enforced_by:
+      - architecture-guardian
+      - release-readiness
+    ci_checkable: false
+    check_description: "Verify backup schedule is configured for daily execution. Verify backup encryption is enabled. Verify backup storage location is geographically separate from primary. Verify backup integrity checksums are validated."
+    violation_action: block-merge
+
+  - id: BC-002
+    rule: "Disaster recovery plan must be tested at least annually"
+    technical_req: "Documented DR plan covering all critical systems. Annual tabletop exercise minimum. Full restoration test annually. Results documented with identified improvements. RTO and RPO targets defined and validated."
+    scope:
+      - infrastructure
+    severity: medium
+    enforced_by:
+      - release-readiness
+    ci_checkable: false
+    check_description: "Verify DR plan document exists and is current. Verify last DR test date is within 12 months. Verify test results are documented with remediation actions for identified gaps."
+    violation_action: require-review
+
+  - id: BC-003
+    rule: "Recovery Time Objective (RTO) and Recovery Point Objective (RPO) must be defined and achievable"
+    technical_req: "RTO: 4 hours maximum for critical systems, 24 hours for non-critical. RPO: 1 hour for critical data, 24 hours for non-critical. Targets validated through DR testing. Monitoring alerts for backup failures."
+    scope:
+      - infrastructure
+      - databases
+      - monitoring
+    severity: high
+    enforced_by:
+      - architecture-guardian
+      - release-readiness
+    ci_checkable: false
+    check_description: "Verify RTO/RPO targets are documented. Verify backup frequency supports RPO targets. Verify DR test results demonstrate RTO targets are achievable. Verify monitoring alerts for backup failures."
+    violation_action: block-merge
+
+  - id: BC-004
+    rule: "System availability must be monitored with alerting for degradation"
+    technical_req: "Uptime monitoring on all critical endpoints. Alerting for downtime, high error rates, and performance degradation. Status page for external communication. Automated health checks at minimum 1-minute intervals."
+    scope:
+      - monitoring
+      - infrastructure
+      - api
+    severity: medium
+    enforced_by:
+      - architecture-guardian
+      - coding-execution
+    ci_checkable: true
+    check_description: "Verify health check endpoints exist for all critical services. Verify monitoring configuration includes uptime, error rate, and latency thresholds. Verify alerting is configured for threshold breaches."
+    violation_action: require-review

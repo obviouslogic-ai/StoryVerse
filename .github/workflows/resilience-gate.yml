@@ -1,0 +1,34 @@
+# HELIos Resilience Gate (adapted for StoryVerse static MVP)
+# The static MVP has no server infrastructure, so runbook/drill checks are
+# structural placeholders. They pass with informational messages today and
+# become real gates once backend infrastructure lands.
+name: Resilience Gate
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  runbook-presence:
+    name: "RES-001: Runbook and Drill Evidence"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: "RES-001.1 — Check for runbook or architecture doc"
+        run: |
+          if [ -f "ARCHITECTURE.md" ]; then
+            echo "PASS Architecture document exists."
+          else
+            echo "::warning::No ARCHITECTURE.md found."
+          fi
+
+      - name: "RES-001.2 — Check for AGENTS.md"
+        run: |
+          if [ -f "AGENTS.md" ]; then
+            echo "PASS AGENTS.md exists."
+          else
+            echo "::error::AGENTS.md is required by HELIos."
+            exit 1
+          fi
