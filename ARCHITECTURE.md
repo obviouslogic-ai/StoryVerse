@@ -2,35 +2,57 @@
 
 ## Current State: Static MVP
 
-The MVP is a single-file static application (`index.html`) with no backend, no build step, and no runtime dependencies beyond CDN-loaded libraries.
+The MVP is a single-file static application (`index.html`) with no backend, no build step, and no runtime dependencies beyond CDN-loaded libraries. It must be served over HTTP (not opened as a local file) because it uses `fetch()` for data loading.
 
 ```
-Browser
+HTTP Server (npx serve . / Vercel / Netlify)
   └── index.html
         ├── Tailwind CSS (CDN)
         ├── Chart.js (CDN)
         ├── Google Fonts (CDN)
-        └── data/sample-characters.json (optional fetch)
+        └── data/sample-characters.json (fetched at startup, inline fallback)
 ```
 
-### Pages (client-side routing via DOM show/hide)
+### Pages (client-side routing via CSS class `.active` on `.page` divs)
 
 | Route slug | Section | Description |
 |------------|---------|-------------|
-| `home` | Landing | Hero, features grid, reader & author pricing |
-| `library` | Library | Book cards with genre filters (static) |
-| `chat` | Chat | Character sidebar + message thread (canned responses) |
-| `author-dashboard` | Dashboard | Upload, Characters, Settings, Analytics tabs |
+| `home` | Landing | Hero, features grid, reader & author pricing, footer |
+| `library` | Library | Data-driven book cards from JSON, genre filters (static), "More Coming Soon" CTA |
+| `chat` | Chat | Character sidebar (data-driven), message thread with canned responses, suggested prompts |
+| `author-dashboard` | Dashboard | Upload (simulated), Characters (data-driven), Settings (UI only), Analytics (Chart.js) |
 
 ### Data Flow
 
-All data lives inline in `<script>` as the `characters` array. `data/sample-characters.json` mirrors this data for external consumption but is not loaded at runtime by default.
+On startup, `fetch('./data/sample-characters.json')` loads books and characters. If the fetch fails (e.g. opened as a file), inline `FALLBACK_CHARACTERS` and `FALLBACK_BOOKS` arrays provide identical data so the app still works.
 
-Chat responses are selected randomly from a per-character `responses` array. No LLM calls are made.
+All data-driven views (library grid, character sidebar, dashboard character list) render from the same `state.characters` and `state.books` arrays. Chat responses are selected randomly from per-character `responses` arrays. No LLM calls are made.
+
+### State Model
+
+A single `state` object tracks:
+
+| Key | Type | Purpose |
+|-----|------|---------|
+| `characters` | Array | Active character data (from fetch or fallback) |
+| `books` | Array | Active book data |
+| `currentCharacterIndex` | Number | Selected chat character |
+| `currentPage` | String | Active page slug |
+| `dataSource` | String | `'fetch'` or `'fallback'` |
+| `chartsInitialized` | Boolean | Prevents Chart.js double-init |
+| `uploadRunning` | Boolean | Guards against duplicate upload simulations |
+
+### Interaction Model
+
+Every visible control falls into one of two categories:
+- **Functional demo**: navigation, library cards, chat input, dashboard tabs, upload simulation, settings sliders/checkboxes, Test Chat links
+- **Explicitly disabled**: Sign In, Get Started, subscription buttons, Edit Profile — all call `showComingSoon()` with a descriptive label
+
+No control is silently dead.
 
 ## Planned Production Architecture
 
-See `docs/TECHNICAL_SPECS.md` for the full production stack (Next.js, FastAPI, PostgreSQL, vector DB, LLM integration).
+See `docs/TECHNICAL_SPECS.md` for the full production stack.
 
 ### High-Level Target
 

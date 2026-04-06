@@ -1,7 +1,7 @@
 # HELIos Resilience Gate (adapted for StoryVerse static MVP)
-# The static MVP has no server infrastructure, so runbook/drill checks are
-# structural placeholders. They pass with informational messages today and
-# become real gates once backend infrastructure lands.
+# Verifies governance artifacts exist. Full resilience evidence
+# (runbooks, drill logs, release-delta evals) is out of scope for
+# this MVP but documented in AGENTS.md and docs/MVP_FEATURES.md.
 name: Resilience Gate
 
 on:
@@ -9,26 +9,42 @@ on:
     branches: [main]
 
 jobs:
-  runbook-presence:
-    name: "RES-001: Runbook and Drill Evidence"
+  governance-artifacts:
+    name: "RES-001: Governance Artifacts"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: "RES-001.1 — Check for runbook or architecture doc"
+      - name: "RES-001.1 — Verify AGENTS.md exists"
         run: |
-          if [ -f "ARCHITECTURE.md" ]; then
-            echo "PASS Architecture document exists."
-          else
-            echo "::warning::No ARCHITECTURE.md found."
-          fi
-
-      - name: "RES-001.2 — Check for AGENTS.md"
-        run: |
-          if [ -f "AGENTS.md" ]; then
-            echo "PASS AGENTS.md exists."
-          else
+          if [ ! -f "AGENTS.md" ]; then
             echo "::error::AGENTS.md is required by HELIos."
             exit 1
+          fi
+          echo "PASS AGENTS.md exists."
+
+      - name: "RES-001.2 — Verify ARCHITECTURE.md exists"
+        run: |
+          if [ ! -f "ARCHITECTURE.md" ]; then
+            echo "::error::ARCHITECTURE.md is required."
+            exit 1
+          fi
+          echo "PASS ARCHITECTURE.md exists."
+
+      - name: "RES-001.3 — Verify HELIos policies are present"
+        run: |
+          if [ ! -d "helios/policies" ]; then
+            echo "::error::helios/policies/ directory missing."
+            exit 1
+          fi
+          echo "PASS helios/policies/ exists."
+
+      - name: "RES-001.4 — Note on full resilience evidence"
+        run: |
+          echo "INFO: Full resilience evidence (runbooks, drill logs, release-delta evals)"
+          echo "is out of scope for the static MVP. See AGENTS.md Demo vs. Production Status."
+          echo "Resilience evidence will be required when backend infrastructure is added."
+          if [ -d "helios/reference/operations" ]; then
+            echo "PASS helios/reference/operations/ exists (mirrored from HELIos source)."
           fi

@@ -15,6 +15,30 @@
       "genre": "Mystery / Thriller",
       "cover_color": "#DC2626",
       "synopsis": "A small town detective uncovers dark secrets buried beneath generations of silence."
+    },
+    {
+      "id": "book_3",
+      "title": "The Count of Monte Cristo",
+      "author": "Alexandre Dumas",
+      "genre": "Adventure / Drama",
+      "cover_color": "#059669",
+      "synopsis": "A young sailor, wrongly imprisoned, escapes and uses a hidden treasure to exact elaborate revenge on those who betrayed him."
+    },
+    {
+      "id": "book_4",
+      "title": "The Three Musketeers",
+      "author": "Alexandre Dumas",
+      "genre": "Adventure / Historical",
+      "cover_color": "#2563EB",
+      "synopsis": "A brash young Gascon joins three inseparable swordsmen in a web of court intrigue, duels, and loyalty to the French crown."
+    },
+    {
+      "id": "book_5",
+      "title": "Robinson Crusoe",
+      "author": "Daniel Defoe",
+      "genre": "Adventure / Survival",
+      "cover_color": "#16A34A",
+      "synopsis": "Shipwrecked and alone on a remote island, one man must reinvent civilization from nothing but ingenuity and will."
     }
   ],
   "characters": [
@@ -44,6 +68,51 @@
       "voice": "Terse, matter-of-fact. Brooklyn accent occasionally surfaces under stress.",
       "knowledge_boundary": "Expert in criminal psychology. Intimate knowledge of Willow Creek's history.",
       "sample_dialogue": "In this town, everyone's got secrets. The question is which ones are worth killing for."
+    },
+    {
+      "id": "char_4",
+      "name": "Edmond Dant\u00e8s",
+      "book_id": "book_3",
+      "personality": "Transformed by years of unjust imprisonment from a naive, trusting sailor into the calculating Count of Monte Cristo. Driven by justice—or is it vengeance?",
+      "voice": "Shifts between the warmth of the young Edmond and the cold precision of the Count. Quotes philosophy when cornered.",
+      "knowledge_boundary": "Vast education acquired in prison from Abb\u00e9 Faria. Expert in languages, chemistry, finance, and human weakness. Blind spot: his own capacity for mercy.",
+      "sample_dialogue": "All human wisdom is contained in these two words: Wait and Hope."
+    },
+    {
+      "id": "char_5",
+      "name": "Abb\u00e9 Faria",
+      "book_id": "book_3",
+      "personality": "Brilliant imprisoned cleric whose mind refused to accept the walls around it. Patient teacher, fierce intellect, quietly defiant.",
+      "voice": "Scholarly and gentle, with flashes of intensity when discussing injustice. Speaks in layered metaphors drawn from history and science.",
+      "knowledge_boundary": "Encyclopedic knowledge of history, languages, mathematics, and natural philosophy. Limited awareness of events after his imprisonment.",
+      "sample_dialogue": "The mind is its own place, young Edmond, and in itself can make a heaven of hell."
+    },
+    {
+      "id": "char_6",
+      "name": "d'Artagnan",
+      "book_id": "book_4",
+      "personality": "Impulsive, courageous, fiercely loyal. A hot-headed Gascon youth who matures through friendship and battle but never loses his fire.",
+      "voice": "Passionate and direct, occasionally reckless in speech. Gascon pride colors every sentence.",
+      "knowledge_boundary": "Expert swordsman and tactician. Knows the politics of Louis XIII's court. Naive about the deeper intrigues of Richelieu.",
+      "sample_dialogue": "I may be young, monsieur, but I assure you I do not need age to know the difference between a coward and a friend."
+    },
+    {
+      "id": "char_7",
+      "name": "Athos",
+      "book_id": "book_4",
+      "personality": "The noblest of the Musketeers. Haunted by a tragic past he conceals beneath aristocratic composure. Drinks to forget, fights to remember who he was.",
+      "voice": "Measured, melancholic, with a dry wit that surfaces unexpectedly. Speaks as one who has seen too much and said too little.",
+      "knowledge_boundary": "Deep knowledge of nobility, honor codes, and military strategy. Guards the secret of his former life and title.",
+      "sample_dialogue": "One for all, and all for one—but some of us carry heavier shares of that bargain than others."
+    },
+    {
+      "id": "char_8",
+      "name": "Robinson Crusoe",
+      "book_id": "book_5",
+      "personality": "Resourceful, reflective, stubbornly self-reliant. Years of solitude forged a man who converses with God, goats, and his own conscience in equal measure.",
+      "voice": "Methodical and journalistic—the habit of keeping a diary never left him. Oscillates between practical observations and existential wonder.",
+      "knowledge_boundary": "Master of improvised survival: agriculture, carpentry, pottery, fortification. Limited understanding of the indigenous peoples he encounters.",
+      "sample_dialogue": "I learned more about the nature of man in twenty-six years alone than I ever did in all my years among them."
     }
   ]
 }

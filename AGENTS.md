@@ -21,33 +21,46 @@ See `ARCHITECTURE.md` for the domain map. See `docs/TECHNICAL_SPECS.md` for the 
 | Markup | Single `index.html` (vanilla HTML5) |
 | Styling | Tailwind CSS via CDN (`cdn.tailwindcss.com`) |
 | Charts | Chart.js via CDN |
-| Routing | Client-side JS (`navigateTo()`, DOM show/hide) |
-| Data | Inline JS arrays + `data/sample-characters.json` |
+| Routing | Client-side JS (`navigateTo()`, CSS class `.active` on `.page` divs) |
+| Data | `fetch('./data/sample-characters.json')` with inline JS fallback |
 | Build | None required |
-| Hosting | Any static host (Vercel, Netlify, GitHub Pages) |
+| Hosting | Any static HTTP server (Vercel, Netlify, GitHub Pages, `npx serve .`) |
+
+## How to Run Locally
+
+This app uses `fetch()` to load data, so it **must be served over HTTP** rather than opened as a file:
+
+```bash
+npx serve .
+# or
+npm run dev
+```
 
 ## Coding Conventions
 
 1. All application code lives in `index.html`. Do not split into separate JS/CSS files without explicit approval.
 2. Use only CDN-loaded dependencies (Tailwind, Chart.js, Google Fonts). No npm runtime dependencies.
-3. Tailwind dynamic class names (e.g. `bg-${color}-600`) do not work with the CDN; use an explicit map of full class strings instead.
+3. Tailwind dynamic class names (e.g. `bg-${color}-600`) do not work with the CDN; use an explicit map of full class strings instead (see `AVATAR_BG` in script).
 4. No `console.log` in committed code except for error paths.
-5. Escape user-provided text before inserting into the DOM. The MVP uses `textContent` for user chat messages. Production must never use `innerHTML` with unsanitized input.
+5. Escape user-provided text before inserting into the DOM. The MVP uses `textContent` for user chat messages and `escapeHtml()` for character data rendered via `innerHTML`. Production must never use `innerHTML` with unsanitized input.
 6. File size limit: keep `index.html` under 2000 lines. If it grows beyond that, discuss splitting strategy before acting.
+7. Every visible button must either perform a demo action or call `showComingSoon()` with a descriptive label. No dead/silent controls.
+8. All buttons must have explicit `type="button"` to prevent implicit form submission.
 
 ## Demo vs. Production Status
 
 | Feature | Status | Notes |
 |---------|--------|-------|
 | Landing page (hero, features, pricing) | Demo complete | Static markup, no backend |
-| Library browse | Demo complete | Hardcoded book cards |
-| Character chat | Demo complete | Canned responses, no LLM |
-| Author dashboard — upload | Demo complete | Simulated progress bar, no file I/O |
-| Author dashboard — characters | Demo complete | Static profiles |
-| Author dashboard — settings | Demo complete | UI only, not persisted |
+| Library browse | Demo complete | Data-driven from `sample-characters.json` with fallback |
+| Character chat | Demo complete | Canned responses from inline array, no LLM |
+| Author dashboard — upload | Demo complete | Simulated progress bar with completion state, no file I/O |
+| Author dashboard — characters | Demo complete | Data-driven profiles with Test Chat link |
+| Author dashboard — settings | Demo complete | UI only, "Save" shows toast, not persisted |
 | Author dashboard — analytics | Demo complete | Chart.js with hardcoded data |
-| Authentication | Not implemented | Buttons render but do nothing |
-| Payments / subscriptions | Not implemented | Pricing UI only |
+| Mobile navigation | Demo complete | Hamburger menu for narrow viewports |
+| Authentication | Not implemented | Buttons show "coming soon" toast |
+| Payments / subscriptions | Not implemented | Pricing CTAs show "coming soon" toast |
 | Real AI/LLM integration | Not implemented | Planned: Anthropic Claude or OpenAI |
 | Manuscript ingestion pipeline | Not implemented | Planned: NLP + vector DB |
 | Canon validation | Not implemented | Conceptual only |
@@ -79,10 +92,11 @@ Before working in these domains, read the applicable enforcement manifest in `he
 Before opening any PR:
 
 1. Review changes against this `AGENTS.md`.
-2. Verify the site loads and all four pages work (`index.html` opened locally or via `npx serve .`).
-3. Verify no enforcement manifest violations in scoped domains.
-4. Iterate until clean.
-5. Then open PR.
+2. Serve the site over HTTP (`npx serve .`) and verify all four pages work.
+3. Check browser console for errors during the primary demo journey.
+4. Verify no enforcement manifest violations in scoped domains.
+5. Iterate until clean.
+6. Then open PR.
 
 ## Where to Look
 

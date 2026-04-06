@@ -20,28 +20,28 @@ jobs:
             echo "::error::index.html not found at repo root"
             exit 1
           fi
-          echo "index.html exists."
+          echo "PASS index.html exists."
 
       - name: Validate JSON data files
         run: |
+          FAIL=0
           for f in data/*.json; do
             if [ -f "$f" ]; then
-              python3 -m json.tool "$f" > /dev/null || { echo "::error::Invalid JSON: $f"; exit 1; }
+              python3 -m json.tool "$f" > /dev/null 2>&1 || { echo "::error::Invalid JSON: $f"; FAIL=1; }
               echo "PASS $f"
             fi
           done
+          exit $FAIL
 
-      - name: Check for broken local asset references
+      - name: Verify required repo files
         run: |
-          echo "Checking that referenced local files exist..."
           MISSING=0
-          for ref in $(grep -oP 'src="(?!https?://|//)[^"]+"|href="(?!https?://|//|#|mailto:)[^"]+"' index.html | sed 's/.*="//;s/"$//' || true); do
-            if [ ! -f "$ref" ] && [ ! -f "./$ref" ]; then
-              echo "::warning::Referenced file not found: $ref"
-              MISSING=$((MISSING + 1))
+          for f in AGENTS.md ARCHITECTURE.md README.md package.json data/sample-characters.json; do
+            if [ ! -f "$f" ]; then
+              echo "::error::Required file missing: $f"
+              MISSING=1
+            else
+              echo "PASS $f"
             fi
           done
-          if [ "$MISSING" -gt 0 ]; then
-            echo "::warning::$MISSING local references could not be resolved."
-          fi
-          echo "Asset reference check complete."
+          exit $MISSING

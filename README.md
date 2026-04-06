@@ -6,8 +6,12 @@ An interactive literary platform that transforms static books into living, inter
 
 ### Local Development
 1. Clone this repository
-2. Open `index.html` in your browser
-3. No build process needed - it's a static site!
+2. Serve over HTTP (required for data loading):
+   ```bash
+   npx serve .
+   ```
+3. Open http://localhost:3000 in your browser
+4. No build process needed - it's a static site!
 
 ### Deploy to Vercel
 1. Push to GitHub
